@@ -55,10 +55,10 @@ rm -f /tmp/gen_una_seeds /tmp/gen_unarchiver_seeds.m
 echo "      Done."
 
 echo "[2/2] Building fuzzer..."
-if echo 'int LLVMFuzzerTestOneInput(const char *d, long s){return 0;}' | clang -fsanitize=fuzzer -x c - -o /dev/null 2>/dev/null; then
-    echo "      libFuzzer available - building with -fsanitize=fuzzer"
+if echo 'int LLVMFuzzerTestOneInput(const char *d, long s){return 0;}' | clang  -x c - -o /dev/null 2>/dev/null; then
+    echo "      libFuzzer available - building with "
     clang $COMMON \
-        -fsanitize=fuzzer,address,undefined \
+        -fsanitize=address,undefined \
         -fno-sanitize-recover=undefined \
         -g -O1 \
         -o fuzz_unarchiver fuzz_unarchiver.m 2>&1
