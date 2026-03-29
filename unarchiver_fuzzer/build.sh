@@ -37,8 +37,9 @@ int main(int argc, char *argv[]) {
         // NSKeyedArchiver seeds
         NSData *ka = [NSKeyedArchiver archivedDataWithRootObject:d requiringSecureCoding:NO error:nil];
         if (ka) { ws(dir, "keyed_secure.bin", 2, ka); ws(dir, "keyed_insecure.bin", 3, ka); }
-        // JSON seed
-        NSData *js = [NSJSONSerialization dataWithJSONObject:d options:0 error:nil];
+        // JSON seed (use JSON-compatible dict without NSData values)
+        NSDictionary *jd = @{@"key": @"value", @"num": @42, @"data": @"dGVzdA=="};
+        NSData *js = [NSJSONSerialization dataWithJSONObject:jd options:0 error:nil];
         if (js) ws(dir, "json.bin", 4, js);
         // Attributed string seed
         NSAttributedString *as = [[NSAttributedString alloc] initWithString:@"Hello World"];
