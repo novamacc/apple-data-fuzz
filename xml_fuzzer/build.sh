@@ -1,5 +1,6 @@
 #!/bin/bash
 # build.sh - Build libxml2/NSXMLParser fuzzer
+# Handles both libFuzzer (local Xcode) and standalone harness (GitHub Actions CI)
 set -e
 cd "$(dirname "$0")"
 
@@ -53,12 +54,29 @@ XMLEOF
 
 echo "      Done. $(ls corpus/ | wc -l | tr -d ' ') seeds"
 
-echo "[2/2] Building fuzzer (ASAN + UBSan + libFuzzer)..."
-clang $COMMON \
-    -fsanitize=fuzzer,address,undefined \
-    -fno-sanitize-recover=undefined \
-    -g -O1 \
-    -o fuzz_xml fuzz_xml.m 2>&1
+echo "[2/2] Building fuzzer..."
+if clang -fsanitize=fuzzer -x c -c /dev/null -o /dev/null 2>/dev/null; then
+    echo "      libFuzzer available - building with -fsanitize=fuzzer"
+    clang $COMMON \
+        -fsanitize=fuzzer,address,undefined \
+        -fno-sanitize-recover=undefined \
+        -g -O1 \
+        -o fuzz_xml fuzz_xml.m 2>&1
+else
+    echo "      libFuzzer NOT available - building with standalone harness"
+    clang $COMMON \
+        -fsanitize=address,undefined \
+        -fno-sanitize-recover=undefined \
+        -g -O1 \
+        -c -o fuzz_xml.o fuzz_xml.m
+    clang -fsanitize=address,undefined -g -O1 \
+        -c -o standalone_harness.o ../standalone_harness.c
+    clang $COMMON \
+        -fsanitize=address,undefined \
+        -g -O1 \
+        -o fuzz_xml fuzz_xml.o standalone_harness.o
+    rm -f fuzz_xml.o standalone_harness.o
+fi
 echo "      Done."
 
 echo ""
